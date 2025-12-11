@@ -16,7 +16,7 @@
                 {% else %} risk-seek {% endif %}">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <h5 class="fw-bold mb-1">{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</h5>
+                        <h5 class="fw-bold mb-1">{{ log.timestamp | ist_time }}</h5>
                         <p class="mb-1"><strong>Temp:</strong> {{ log.temperature }}°C</p>
                         <p class="mb-1 text-muted small">
                             {% if log.has_cough %} <span class="badge bg-secondary">Cough</span> {% endif %}

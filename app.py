@@ -2,7 +2,9 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 from models import db, User, BabyProfile, HealthLog
 import os
 from datetime import datetime
+from datetime import datetime
 from dotenv import load_dotenv
+import pytz
 
 load_dotenv()
 
@@ -17,6 +19,16 @@ db.init_app(app)
 def init_db():
     db.create_all()
     print("Initialized the database.")
+@app.template_filter('ist_time')
+def ist_time_filter(dt):
+    if dt is None:
+        return ""
+    utc_tz = pytz.timezone('UTC')
+    ist_tz = pytz.timezone('Asia/Kolkata')
+    # Assuming dt is naive and in UTC as per models.py default
+    dt = utc_tz.localize(dt)
+    ist_dt = dt.astimezone(ist_tz)
+    return ist_dt.strftime('%Y-%m-%d %I:%M %p')
 
 @app.route('/')
 def home():
@@ -125,6 +137,7 @@ def add_baby():
     return render_template('add_baby.html')
 
 from services import analyze_risk, send_alert_email
+from datetime import timedelta
 
 @app.route('/enter_log/<int:baby_id>', methods=['GET', 'POST'])
 def enter_log(baby_id):
@@ -136,6 +149,12 @@ def enter_log(baby_id):
         return "Unauthorized", 403
         
     if request.method == 'POST':
+        # Deduplication check: Check if a log was added for this baby in the last 30 seconds
+        last_log = HealthLog.query.filter_by(baby_id=baby.id).order_by(HealthLog.timestamp.desc()).first()
+        if last_log and (datetime.utcnow() - last_log.timestamp) < timedelta(seconds=30):
+             flash('Log already saved recently. Preventing duplicate entry.', 'warning')
+             return redirect(url_for('view_logs', baby_id=baby.id))
+
         try:
             temp = float(request.form.get('temperature'))
         except ValueError:
