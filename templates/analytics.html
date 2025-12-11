@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-11">
+        <h2 class="fw-bold text-gradient mb-4 text-center">Health Analytics</h2>
+
+        {% if not analytics_data %}
+        <div class="text-center py-5">
+            <h4 class="text-muted">No profiles found. Add a baby to see analytics.</h4>
+        </div>
+        {% else %}
+
+        <!-- Tabs Implementation -->
+        <ul class="nav nav-pills mb-4 justify-content-center" id="analyticsTabs" role="tablist">
+            {% for baby in analytics_data %}
+            <li class="nav-item" role="presentation">
+                <button class="nav-link glass-container px-4 mx-2 {% if loop.first %}active{% endif %}"
+                    id="tab-{{ baby.id }}" data-bs-toggle="pill" data-bs-target="#content-{{ baby.id }}" type="button"
+                    role="tab">
+                    {{ baby.name }}
+                </button>
+            </li>
+            {% endfor %}
+        </ul>
+
+        <div class="tab-content" id="analyticsTabContent">
+            {% for baby in analytics_data %}
+            <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="content-{{ baby.id }}"
+                role="tabpanel">
+
+                <!-- Chart Section -->
+                <div class="glass-container p-4 mb-4">
+                    <h5 class="text-muted fw-bold mb-3">Temperature Trends (°C)</h5>
+                    <div style="position: relative; height:300px; width:100%">
+                        <canvas id="chart-{{ baby.id }}"></canvas>
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="row g-4 mb-4">
+                    <!-- Total Logs -->
+                    <div class="col-md-3">
+                        <div class="glass-container p-4 text-center h-100">
+                            <h5 class="text-muted fw-bold">Total Logs</h5>
+                            <div class="display-4 fw-bold text-primary">{{ baby.total_logs }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Risk Distribution -->
+                    <div class="col-md-9">
+                        <div class="glass-container p-4 h-100">
+                            <h5 class="text-muted fw-bold mb-3">Risk Assessment Breakdown</h5>
+                            <div class="d-flex justify-content-around align-items-center text-center">
+                                <div>
+                                    <span class="d-block fs-3 fw-bold text-success">{{ baby.risk_counts['Normal']
+                                        }}</span>
+                                    <small class="text-muted">Normal</small>
+                                </div>
+                                <div>
+                                    <span class="d-block fs-3 fw-bold text-warning">{{ baby.risk_counts['Monitor
+                                        Closely'] }}</span>
+                                    <small class="text-muted">Monitor</small>
+                                </div>
+                                <div>
+                                    <span class="d-block fs-3 fw-bold text-danger">{{ baby.risk_counts['Seek Medical
+                                        Attention'] }}</span>
+                                    <small class="text-muted">Action Required</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Symptoms Stats -->
+                <div class="glass-container p-4">
+                    <h5 class="text-muted fw-bold mb-3">Recorded Symptoms</h5>
+                    {% set total_symptoms = baby.symptom_counts.values() | sum %}
+                    <div class="progress mb-3" style="height: 30px;">
+                        {% if total_symptoms > 0 %}
+                        <div class="progress-bar bg-info text-dark" role="progressbar"
+                            style="width: {{ (baby.symptom_counts['Runny Nose'] / total_symptoms * 100) }}%">Nose</div>
+                        <div class="progress-bar bg-secondary" role="progressbar"
+                            style="width: {{ (baby.symptom_counts['Cough'] / total_symptoms * 100) }}%">Cough</div>
+                        <div class="progress-bar bg-danger" role="progressbar"
+                            style="width: {{ (baby.symptom_counts['Vomiting'] / total_symptoms * 100) }}%">Vomit</div>
+                        {% else %}
+                        <div class="progress-bar w-100 bg-light text-dark">No Data</div>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-4 justify-content-center mt-3 small text-muted">
+                        <span>Total Coughs: <strong>{{ baby.symptom_counts['Cough'] }}</strong></span>
+                        <span>Runny Noses: <strong>{{ baby.symptom_counts['Runny Nose'] }}</strong></span>
+                        <span>Vomiting Episodes: <strong>{{ baby.symptom_counts['Vomiting'] }}</strong></span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Chart.js CDN -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        {% for baby in analytics_data %}
+        new Chart(document.getElementById('chart-{{ baby.id }}'), {
+            type: 'line',
+            data: {
+                labels: {{ baby.dates | tojson }},
+        datasets: [{
+            label: 'Temperature (°C)',
+            data: {{ baby.temps | tojson }},
+        borderColor: '#0d6efd',
+        backgroundColor: 'rgba(13, 110, 253, 0.1)',
+        borderWidth: 2,
+        tension: 0.3,
+        fill: true,
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: '#0d6efd',
+        pointBorderWidth: 2,
+        pointRadius: 4
+                    }]
+                },
+        options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: false,
+                grid: { color: 'rgba(0,0,0,0.05)' }
+            },
+            x: {
+                grid: { display: false }
+            }
+        },
+        plugins: {
+            legend: { display: true }
+        }
+    }
+            });
+    {% endfor %}
+    });
+</script>
+{% endblock %}

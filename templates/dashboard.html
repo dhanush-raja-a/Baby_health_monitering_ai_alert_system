@@ -1,8 +1,56 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="text-center mb-5">
-    <h2 class="fw-bold text-gradient">Your Baby Dashboard</h2>
-    <p class="text-muted">Select a profile to track health logs</p>
+<!-- Hero Section -->
+<div class="p-5 mb-5 rounded-3 glass-container text-center position-relative overflow-hidden">
+    <div class="position-absolute top-0 start-0 w-100 h-100"
+        style="background: linear-gradient(135deg, rgba(66, 135, 245, 0.1), rgba(200, 80, 192, 0.1)); z-index: -1;">
+    </div>
+    <h1 class="display-4 fw-bold text-gradient mb-3">Hi there, Parent! 👋</h1>
+    <p class="lead text-muted mb-4 mx-auto" style="max-width: 600px;">
+        Welcome to your personal <strong>BabyMonitor AI</strong>. We help you track vitals and get instant health
+        advice.
+    </p>
+
+    {% if not babies %}
+    <div class="d-flex justify-content-center gap-3">
+        <a href="{{ url_for('add_baby') }}" class="btn btn-primary rounded-pill px-5 py-3 shadow-lg fw-bold">
+            <span class="fs-5">+ Add Your First Baby</span>
+        </a>
+    </div>
+    {% endif %}
+</div>
+
+{% if not babies %}
+<!-- How It Works Section (Only shown if no babies or maybe always shown? Let's show if no babies to guide them) -->
+<div class="row text-center mb-5">
+    <h4 class="text-muted fw-bold mb-4">How it Works</h4>
+    <div class="col-md-4 mb-3">
+        <div class="p-4">
+            <div class="fs-1 mb-3">👶</div>
+            <h5 class="fw-bold">1. Create Profile</h5>
+            <p class="text-muted small">Add your baby's details like name and DOB.</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="p-4">
+            <div class="fs-1 mb-3">🌡️</div>
+            <h5 class="fw-bold">2. Log Health</h5>
+            <p class="text-muted small">Enter temperature, symptoms, and feed details.</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3">
+        <div class="p-4">
+            <div class="fs-1 mb-3">🤖</div>
+            <h5 class="fw-bold">3. Get AI Analysis</h5>
+            <p class="text-muted small">Receive instant risk assessments and advice.</p>
+        </div>
+    </div>
+</div>
+{% else %}
+
+<div id="profiles" class="text-center mb-4">
+    <h3 class="fw-bold text-gradient">Your Baby Profiles</h3>
+    <p class="text-muted small">Tap a card to manage health logs</p>
 </div>
 
 <div class="row g-4 justify-content-center">
@@ -57,4 +105,5 @@
         </a>
     </div>
 </div>
+{% endif %}
 {% endblock %}

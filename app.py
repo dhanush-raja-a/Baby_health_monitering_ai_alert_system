@@ -80,7 +80,10 @@ def calculate_age(dob):
     if today.day < dob.day:
         age_months -= 1
         
-    if age_months < 12:
+    if age_months < 1:
+        age_days = (today - dob).days
+        return f"{age_days} days"
+    elif age_months < 12:
         return f"{age_months} months"
     else:
         years = age_months // 12
@@ -135,6 +138,32 @@ def add_baby():
             flash('Invalid Date format', 'danger')
             
     return render_template('add_baby.html')
+    return render_template('add_baby.html')
+
+@app.route('/edit_baby/<int:baby_id>', methods=['GET', 'POST'])
+def edit_baby(baby_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
+    baby = BabyProfile.query.get_or_404(baby_id)
+    if baby.parent.id != session['user_id']:
+        return "Unauthorized", 403
+        
+    if request.method == 'POST':
+        baby.name = request.form.get('name')
+        dob_str = request.form.get('dob')
+        baby.blood_group = request.form.get('blood_group')
+        baby.allergies = request.form.get('allergies')
+        
+        try:
+             baby.dob = datetime.strptime(dob_str, '%Y-%m-%d').date()
+             db.session.commit()
+             flash('Baby profile updated successfully!', 'success')
+             return redirect(url_for('profile'))
+        except ValueError:
+             flash('Invalid Date format', 'danger')
+             
+    return render_template('edit_baby.html', baby=baby)
 
 from services import analyze_risk, send_alert_email
 from datetime import timedelta
@@ -232,6 +261,66 @@ def view_logs(baby_id):
         
     logs = HealthLog.query.filter_by(baby_id=baby_id).order_by(HealthLog.timestamp.desc()).all()
     return render_template('view_logs.html', baby=baby, logs=logs)
+
+@app.route('/analytics')
+def analytics():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+        
+    user_id = session['user_id']
+    user = User.query.get(user_id)
+    
+    # Prepare data structure for the frontend
+    analytics_data = []
+    
+    for baby in user.babies:
+        baby_stats = {
+            'id': baby.id,
+            'name': baby.name,
+            'total_logs': len(baby.logs),
+            'risk_counts': {'Normal': 0, 'Monitor Closely': 0, 'Seek Medical Attention': 0},
+            'symptom_counts': {'Cough': 0, 'Runny Nose': 0, 'Vomiting': 0},
+            'dates': [],
+            'temps': []
+        }
+        
+        # Process logs in chronological order for the graph
+        sorted_logs = sorted(baby.logs, key=lambda x: x.timestamp)
+        for log in sorted_logs:
+            # Stats
+            if log.ai_risk_level in baby_stats['risk_counts']:
+                baby_stats['risk_counts'][log.ai_risk_level] += 1
+            if log.has_cough: baby_stats['symptom_counts']['Cough'] += 1
+            if log.has_runny_nose: baby_stats['symptom_counts']['Runny Nose'] += 1
+            if log.has_vomiting: baby_stats['symptom_counts']['Vomiting'] += 1
+            
+            # Graph Data
+            baby_stats['dates'].append(log.timestamp.strftime('%Y-%m-%d %H:%M'))
+            baby_stats['temps'].append(log.temperature)
+            
+        analytics_data.append(baby_stats)
+            
+    return render_template('analytics.html', analytics_data=analytics_data)
+
+@app.route('/wheezing')
+def wheezing():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return render_template('wheezing.html')
+
+@app.route('/profile')
+def profile():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user = User.query.get(session['user_id'])
+    return render_template('profile.html', user=user)
+
+@app.route('/select_log_baby')
+def select_log_baby():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    user = User.query.get(session['user_id'])
+    return render_template('select_baby_logs.html', babies=user.babies)
 
 if __name__ == '__main__':
     with app.app_context():

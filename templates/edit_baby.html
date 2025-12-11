@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="glass-container p-4">
+            <h3 class="mb-4 text-center fw-bold text-gradient">Edit Profile: {{ baby.name }}</h3>
+            <form method="POST">
+                <div class="mb-3">
+                    <label class="form-label">Baby Name</label>
+                    <input type="text" name="name" class="form-control" value="{{ baby.name }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="dob" class="form-control" value="{{ baby.dob }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Blood Group</label>
+                    <select name="blood_group" class="form-select form-control">
+                        <option value="A+" {% if baby.blood_group=='A+' %}selected{% endif %}>A+</option>
+                        <option value="A-" {% if baby.blood_group=='A-' %}selected{% endif %}>A-</option>
+                        <option value="B+" {% if baby.blood_group=='B+' %}selected{% endif %}>B+</option>
+                        <option value="B-" {% if baby.blood_group=='B-' %}selected{% endif %}>B-</option>
+                        <option value="O+" {% if baby.blood_group=='O+' %}selected{% endif %}>O+</option>
+                        <option value="O-" {% if baby.blood_group=='O-' %}selected{% endif %}>O-</option>
+                        <option value="AB+" {% if baby.blood_group=='AB+' %}selected{% endif %}>AB+</option>
+                        <option value="AB-" {% if baby.blood_group=='AB-' %}selected{% endif %}>AB-</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Allergies (Optional)</label>
+                    <input type="text" name="allergies" class="form-control" value="{{ baby.allergies }}">
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
+                    <a href="{{ url_for('profile') }}" class="btn btn-link text-muted">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
