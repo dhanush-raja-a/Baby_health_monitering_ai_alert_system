@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-gradient">Health Logs: {{ baby.name }}</h2>
+        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">Back to Dashboard</a>
+    </div>
+
+    {% if logs %}
+    <div class="row">
+        {% for log in logs %}
+        <div class="col-12 mb-3">
+            <div class="glass-container p-3 
+                {% if log.ai_risk_level == 'Normal' %} risk-normal 
+                {% elif log.ai_risk_level == 'Monitor Closely' %} risk-monitor 
+                {% else %} risk-seek {% endif %}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="fw-bold mb-1">{{ log.timestamp.strftime('%Y-%m-%d %H:%M') }}</h5>
+                        <p class="mb-1"><strong>Temp:</strong> {{ log.temperature }}°C</p>
+                        <p class="mb-1 text-muted small">
+                            {% if log.has_cough %} <span class="badge bg-secondary">Cough</span> {% endif %}
+                            {% if log.has_runny_nose %} <span class="badge bg-secondary">Runny Nose</span> {% endif %}
+                            {% if log.has_vomiting %} <span class="badge bg-secondary">Vomiting</span> {% endif %}
+                        </p>
+                        <p class="mb-0 small">{{ log.food_intake }}</p>
+                    </div>
+                    <div class="text-end">
+                        <span class="badge 
+                            {% if log.ai_risk_level == 'Normal' %} bg-success 
+                            {% elif log.ai_risk_level == 'Monitor Closely' %} bg-warning text-dark 
+                            {% else %} bg-danger {% endif %}">
+                            {{ log.ai_risk_level }}
+                        </span>
+                        <div class="mt-2 text-muted small" style="max-width: 300px;">
+                            {{ log.ai_analysis_text }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="text-center py-5">
+        <h4 class="text-muted">No logs found yet.</h4>
+        <a href="{{ url_for('enter_log', baby_id=baby.id) }}" class="btn btn-primary mt-3">Add First Log</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}
